@@ -67,7 +67,8 @@ const EventCal = defineComponent({
       const calendar = this.$refs.fullCalendar as InstanceType<typeof FullCalendar>
       const calendarApi:CalendarApi = calendar.getApi();
       calendarApi.refetchEvents();
-      calendarApi.render();
+      // @ts-ignore
+      calendarApi.render(); 
     },
   }
 })

@@ -3,8 +3,8 @@ import dayjs from 'dayjs';
 import $ from 'jquery';
 
 export interface ApiResponse {
-  results_available: any,
-  results_returned: any,
+  results_available: string,
+  results_returned: string,
   events: ApiEvents[];
 }
 
@@ -55,16 +55,13 @@ const getEventFormat = (data: ApiResponse) => {
   });
 }
 
-const searchApiEvents = (events: EventInput[], cal:any): EventInput[] => {
-    const start = cal.start;
+const searchApiEvents = (events: EventInput[], start: string, limit: string, keyword: string): EventInput[] => {
     if (start.length > 0) {
       events = events.filter(event => {return (dayjs(<string>event.start).format("HH:mm") >= start);});
     }
-    const limit = cal.limit;
     if (limit.length > 0) {
       events = events.filter(event => {return (Number(event.limit) >= Number(limit));});
     }
-    const keyword = cal.keyword;
     if (keyword.length > 0) {
       events = events.filter(
         event => {
@@ -83,31 +80,25 @@ const getApiEvent = async (ym:string, pageNo:number):Promise<ApiResponse> => {
 export const loadApiEvents = async (startDay: Date, cal:any):Promise<EventInput[]> => {
 
   const ym: string = dayjs(startDay).add(7, 'd').format("YYYYMM");
-
   let data: ApiResponse;
-  let event: EventInput[] = [];
   let events: EventInput[] = [];
-  const promises: any[] = []; 
   let pageNo: number = 0;
-
   const item = sessionStorage.getItem('event' + ym);
   if (item !== null) {
     events = JSON.parse(item);
-    return searchApiEvents(events, cal);
+    return searchApiEvents(events, cal.start, cal.limit, cal.keyword);
   }
-
   data = await getApiEvent(ym, pageNo);
-  event = getEventFormat(data);
-  events = events.concat(event);
+  events = events.concat(getEventFormat(data));
   const maxPage: number = Math.ceil(Number(data.results_available) / Number(data.results_returned));
   cal.progressMaxValue = maxPage;
   pageNo += 1;
   cal.progressValue = 1;
+  const promises = []; 
   while (pageNo < maxPage) {
     promises.push((async () => {
       data = await getApiEvent(ym, pageNo);
-      event = getEventFormat(data);
-      events = events.concat(event);
+      events = events.concat(getEventFormat(data));
       cal.progressValue = cal.progressValue + 1;
     })());
     pageNo += 1;
