@@ -1,5 +1,5 @@
 import vue from '@vitejs/plugin-vue'
-
+import { ViteMinifyPlugin } from 'vite-plugin-minify'
 module.exports = {
   root: './',
   base: './',
@@ -7,7 +7,8 @@ module.exports = {
     sourcemap: 'true'
   },
   plugins: [
-    vue()
+    vue(),
+    ViteMinifyPlugin({})
   ],
   css: {
     devSourcemap: true,
