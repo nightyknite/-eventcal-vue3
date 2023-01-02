@@ -65,7 +65,7 @@ const searchApiEvents = (events: EventInput[], start: string, limit: string, key
     if (keyword.length > 0) {
       events = events.filter(
         event => {
-          ((event.description.indexOf(keyword) >= 0) || (event.title!.indexOf(keyword) >= 0))
+          return ((event.description.indexOf(keyword) >= 0) || (event.title!.indexOf(keyword) >= 0))
       });
     }
     return events;
