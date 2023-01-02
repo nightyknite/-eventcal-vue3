@@ -1,4 +1,4 @@
-import { EventInput } from '@fullcalendar/vue3'
+import { EventInput } from '@fullcalendar/core'
 import dayjs from 'dayjs';
 import $ from 'jquery';
 
