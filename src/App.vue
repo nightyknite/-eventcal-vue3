@@ -7,10 +7,12 @@ import listPlugin from '@fullcalendar/list';
 import { loadApiEvents } from './event-utils'
 import tippy from 'tippy.js'
 import 'tippy.js/dist/tippy.css'
+// @ts-ignore
+import Search from "./components/Search.vue";
 
-const EventCal = defineComponent({
+const App = defineComponent({
   components: {
-    FullCalendar,
+    FullCalendar, Search
   },
   data() {
     return {
@@ -33,7 +35,7 @@ const EventCal = defineComponent({
         eventClick: this.handleEventClick,
         eventsSet: this.handleEvents,
         eventDidMount: this.handleEventDidMount,
-        events: (info, successCallback, failureCallback) => {
+        events: (info, successCallback, _) => {
           loadApiEvents(info.start, this).then(events => {
             successCallback(events);
           });          
@@ -72,25 +74,15 @@ const EventCal = defineComponent({
     },
   }
 })
-export default EventCal
+export default App
 </script>
 <template>
-  <div>
-    <b-progress :value="progressValue" :max="progressMaxValue" class="mb-3" show-progress ></b-progress>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-      <div class="container-fluid">
-        <a class="navbar-brand" href="#">Event Calendar</a>
-        <div class="collapse navbar-collapse" >
-          <form class="d-flex">
-            <input id="start" v-model="start" class="form-control me-sm-2" type="text" placeholder="00:00" style="width:5em" maxlength="5" >
-            <input id="limit" v-model="limit"  class="form-control me-sm-2" type="text" placeholder="limit" style="width:4em" maxlength="4" >
-            <input id="keyword" v-model="keyword" class="form-control me-sm-2" type="search" placeholder="keyword" >
-            <button id="search" class="btn btn-outline-success my-2 my-sm-0" type="button" v-on:click="handleSearch()">Search</button>    
-          </form>
-        </div>
-      </div>
-    </nav>
-  </div>
+<b-progress :value="progressValue" :max="progressMaxValue" class="mb-3" show-progress ></b-progress>
+<Search v-model:start="start" 
+          v-model:limit="limit" 
+          v-model:keyword="keyword" 
+          @btnClick="handleSearch()"
+  />
   <FullCalendar
     class='app-calendar'
     :options='calendarOptions'
