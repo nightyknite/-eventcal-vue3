@@ -24,7 +24,7 @@ const App = defineComponent({
         headerToolbar: {
           left: 'prev,next today',
           center: 'title',
-          right: 'dayGridMonth,listDay'
+          right: 'dayGridMonth, listDay'
         },            
         locale: 'ja',
         buttonText: {
@@ -42,11 +42,17 @@ const App = defineComponent({
         }
       } as CalendarOptions,
       currentEvents: [] as EventApi[],
-      limit: '',
-      start: '',
+      limitFrom: '',
+      limitTo: '',
+      startFrom: '',
+      startTo: '',
+      acceptedFrom: '',
+      acceptedTo: '',
       keyword: '',
+      nickname: '',
       progressValue: 0,
       progressMaxValue: 0,
+      isDisplayProgress: false
     }
   },
   methods: {
@@ -77,10 +83,15 @@ const App = defineComponent({
 export default App
 </script>
 <template>
-<b-progress :value="progressValue" :max="progressMaxValue" class="mb-3" show-progress ></b-progress>
-<Search v-model:start="start" 
-          v-model:limit="limit" 
+<b-progress  v-show="isDisplayProgress" :value="progressValue" :max="progressMaxValue" class="mb-3" show-progress ></b-progress>
+  <Search v-model:startFrom="startFrom" 
+          v-model:startTo="startTo" 
+          v-model:limitFrom="limitFrom" 
+          v-model:limitTo="limitTo" 
+          v-model:acceptedFrom="acceptedFrom" 
+          v-model:acceptedTo="acceptedTo" 
           v-model:keyword="keyword" 
+          v-model:nickname="nickname" 
           @btnClick="handleSearch()"
   />
   <FullCalendar

@@ -9,6 +9,7 @@ export interface ApiResponse {
 }
 
 export interface ApiEvents {
+  event_id: string;
   title: string;
   limit: string;
   started_at: string;
@@ -29,11 +30,13 @@ const API_URL = 'https://connpass.com/api/v1/event/';
 const getEventFormat = (data: ApiResponse) => {
   return data.events.map(item => {
     return {
+      id: item.event_id,
       title: `${item.title} (${item.limit})`,
       start: item.started_at,
       end: item.ended_at,
       url: item.event_url,
       limit: item.limit,
+      accepted: item.accepted,
       description: ""
                     + "day:" + dayjs(item.started_at).format("MM/DD HH:mm") + " - "
                     + "" + dayjs(item.ended_at).format("MM/DD HH:mm") + "<br>"
@@ -47,20 +50,31 @@ const getEventFormat = (data: ApiResponse) => {
                     + "catch:" + item.catch + "<br>"
                     + "description:" + item.description.replace(/<("[^"]*"|'[^']*'|[^'">])*>/g,'').slice(0,50) + "<br>"
                     + "",
-      color: '',
       backgroundColor: '#a82400',
       borderColor: '',
-      textColor: ''
+      textColor: '',
     }    
   });
 }
 
-const searchApiEvents = (events: EventInput[], start: string, limit: string, keyword: string): EventInput[] => {
-    if (start.length > 0) {
-      events = events.filter(event => {return (dayjs(<string>event.start).format("HH:mm") >= start);});
+const searchApiEvents = (events: EventInput[], startFrom: string, startTo: string, limitFrom: string, limitTo:string, acceptedFrom: string, acceptedTo: string, keyword: string): EventInput[] => {
+    if (startFrom.length > 0) {
+      events = events.filter(event => {return (dayjs(<string>event.start).format("HH:mm") >= startFrom);});
     }
-    if (limit.length > 0) {
-      events = events.filter(event => {return (Number(event.limit) >= Number(limit));});
+    if (startTo.length > 0) {
+      events = events.filter(event => {return (dayjs(<string>event.start).format("HH:mm") <= startTo);});
+    }
+    if (limitFrom.length > 0) {
+      events = events.filter(event => {return (Number(event.limit) >= Number(limitFrom));});
+    }
+    if (limitTo.length > 0) {
+      events = events.filter(event => {return (Number(event.limit) <= Number(limitTo));});
+    }
+    if (acceptedFrom.length > 0) {
+      events = events.filter(event => {return (Number(event.accepted) >= Number(acceptedFrom));});
+    }
+    if (acceptedTo.length > 0) {
+      events = events.filter(event => {return (Number(event.accepted) <= Number(acceptedTo));});
     }
     if (keyword.length > 0) {
       events = events.filter(
@@ -70,6 +84,28 @@ const searchApiEvents = (events: EventInput[], start: string, limit: string, key
     }
     return events;
 }
+
+/*
+const setNicknameApiEvents = async (events: EventInput[], ym: string, nickname: string) => {
+  if (nickname.length > 0) {
+    const ownEvent = await getApiEventByNickname(ym, nickname);
+    console.log(ownEvent);
+    events = events.map(
+      event => { 
+        if (ownEvent.events.some((item) => item.event_id === event.id)) {
+          event.backgroundColor = 'green';
+        }
+        return event;
+    });
+  }
+  return events;
+}
+const getApiEventByNickname = async (ym:string, nickname: string):Promise<ApiResponse> => {
+  const apiUrl = `${API_URL}?count=100&ym=${ym}&nickname=${nickname}&start=1&order=2`;
+  const data: ApiResponse = await $.ajax({url: apiUrl, dataType: 'jsonp'});
+  return data;
+}
+*/
 
 const getApiEvent = async (ym:string, pageNo:number):Promise<ApiResponse> => {
   const PAGING: number = 100;
@@ -86,11 +122,14 @@ export const loadApiEvents = async (startDay: Date, cal:any):Promise<EventInput[
   const item = sessionStorage.getItem('event' + ym);
   if (item !== null) {
     events = JSON.parse(item);
-    return searchApiEvents(events, cal.start, cal.limit, cal.keyword);
+    events = searchApiEvents(events, cal.startFrom, cal.startTo, cal.limitFrom, cal.limitTo, cal.acceptedFrom, cal.acceptedTo, cal.keyword);
+    // events = setNicknameApiEvents(events, ym, cal.nickname);
+    return events;
   }
   data = await getApiEvent(ym, pageNo);
   events = events.concat(getEventFormat(data));
   const maxPage: number = Math.ceil(Number(data.results_available) / Number(data.results_returned));
+  cal.isDisplayProgress = true;
   cal.progressMaxValue = maxPage;
   pageNo += 1;
   cal.progressValue = 1;
@@ -105,5 +144,6 @@ export const loadApiEvents = async (startDay: Date, cal:any):Promise<EventInput[
   }
   await Promise.all(promises);
   sessionStorage.setItem('event' + ym, JSON.stringify(events));
+  cal.isDisplayProgress = false;
   return events;  
 }
